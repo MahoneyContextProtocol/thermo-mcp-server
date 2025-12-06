@@ -1,126 +1,199 @@
-# Cursor MCP Setup — thermo-mcp-server
 
-This document explains how Cursor users can enable and interact with the `thermo-mcp-server` using Cursor’s builtin MCP support.
+# thermo-mcp-server — Cursor Support Edition  
+This branch provides **Cursor-optimized MCP configuration**, making it effortless for Cursor IDE users to run, connect, and use the server with zero manual setup.
 
----
-
-# 1. What the Server Provides Inside Cursor
-
-Once enabled, Cursor exposes two MCP tools:
-
-### ✔ `get_latest_temperature`  
-Reads the most recent temperature entry.
-
-### ✔ `set_latest_temperature`  
-Writes a temperature value into the JSON file.
-
-Cursor lists these tools under:  
-**Settings → Tools & MCP → thermo-mcp-server**
+It includes everything from the main branch plus Cursor-specific files, workflows, and setup instructions.
 
 ---
 
-# 2. Required Cursor MCP Configuration File
+# 🎯 What This Branch Adds
 
-Cursor loads MCP definitions from:
-
+### ✔ Automatic MCP Detection in Cursor  
+Includes:  
 ```
-<system_application_support_directory>/Cursor/mcp/
+.cursor/mcp_thermo.json
+.cursor/commands/mcp.md
 ```
+These allow Cursor to discover and register the MCP server immediately.
 
-Create a file inside that directory (the location varies by OS):
+### ✔ Ready-to-run FastMCP Server  
+No changes to functionality — still exposes:
 
-```
-thermo.json
-```
+- `get_latest_temperature()`  
+- `set_latest_temperature()`  
 
-Use this generic, path-agnostic configuration:
+### ✔ Easy Device Simulation  
+Cursor users can write temperatures via:
 
-```json
-{
-  "command": "python",
-  "args": ["server.py"],
-  "workingDirectory": "<absolute-path-to-your-thermo-mcp-server-folder>",
-  "env": {
-    "THERMO_DATA_PATH": "data/latest_temp.json"
-  }
-}
+```bash
+python thermometer_listener.py --temp 72.5 --unit F
 ```
 
-**You must replace `<absolute-path-to-your-thermo-mcp-server-folder>`**  
-with the real, full folder path on your system.
+### ✔ Same JSON temperature storage  
+Shared file:
 
-Examples (do NOT copy these literally):
-- macOS: `/Users/<name>/Developer/thermo-mcp-server`
-- Windows: `C:\\Users\\<name>\\Projects\\thermo-mcp-server`
-- Linux: `/home/<user>/code/thermo-mcp-server`
+```
+data/latest_temp.json
+```
 
 ---
 
-# 3. Enabling the Server in Cursor
-
-1. Open **Settings → Tools & MCP**
-2. Find **thermo-mcp-server**
-3. Toggle **Enable**
-
-Cursor will attempt to launch:
+# 🗂 Project Structure (Cursor Edition)
 
 ```
+thermo-mcp-server/
+│
+├── server.py
+├── thermometer_listener.py
+├── notifier.py
+├── mcp_config.json
+├── requirements.txt
+│
+├── data/
+│   └── latest_temp.json
+│
+└── .cursor/
+    ├── mcp_thermo.json          # Cursor MCP server registration
+    └── commands/
+        └── mcp.md               # Optional helper command
+```
+
+---
+
+# 🚀 Quick Start (Cursor Users)
+
+Follow these steps **inside Cursor**:
+
+## 1. Open a Terminal in Cursor
+
+Use:
+
+```
+Ctrl/Cmd + `
+```
+
+Then run:
+
+```bash
+cd thermo-mcp-server
+```
+
+---
+
+## 2. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## 3. Install requirements
+
+```bash
+pip install -r requirements.txt
+```
+
+Expected Cursor terminal output:
+
+- All packages install successfully  
+- No warnings that stop execution  
+- MCP server dependencies installed  
+
+---
+
+## 4. Run the MCP server *inside Cursor*
+
+```bash
 python server.py
 ```
 
-inside the working directory you provided.
+Cursor will automatically show:
 
-If successful, Cursor will show:
-- 🟢 Enabled  
-- 🟢 Tools loaded (2 tools)
+- ✔ Server detected  
+- ✔ Tools loading  
+- ✔ thermo-mcp-server connected  
 
----
-
-# 4. Using MCP Tools Inside Cursor Chat
-
-In any Cursor chat, type:
-
-```
-@get_latest_temperature
-```
-
-or:
-
-```
-@set_latest_temperature value=72.5 unit=F
-```
-
-Cursor will autocomplete MCP tools and run them.
+You do **not** need to run `/mcp` — Cursor handles everything.
 
 ---
 
-# 5. Troubleshooting
+# 🌡 Writing a Temperature (Inside Cursor Terminal)
 
-### ❌ Server shows JSON errors  
-The configuration file (`thermo.json`) probably contains invalid JSON.
+```bash
+python thermometer_listener.py --temp 73.2 --unit F
+```
 
-### ❌ File not found errors  
-Check that:
-- The workingDirectory is correct  
-- `data/latest_temp.json` exists  
-- The virtual environment is set up  
+Check the JSON:
 
-### ❌ Python not found  
-Configure Python path in:  
-**Settings → Agents → Python interpreter**
+```bash
+cat data/latest_temp.json
+```
 
-### ❌ Server exits immediately  
-That's normal if run manually in Terminal — only MCP clients speak JSON-RPC.
+Cursor's MCP tools can now call:
 
----
+- `get_latest_temperature`
+- `set_latest_temperature`
 
-# 6. Development Workflow for Cursor Users
-
-1. Edit the Python code  
-2. If the server is enabled, Cursor will detect changes when you toggle it  
-3. Turn the server OFF → ON to reload  
-4. Use **View → Debug Console → MCP** to view logs
+directly from the chat.
 
 ---
 
-# End of Cursor Documentation
+# 📄 Temperature JSON Format
+
+```
+{
+  "temperature": 73.2,
+  "unit": "F",
+  "timestamp": "2025-12-06T04:36:52Z",
+  "source": "listener"
+}
+```
+
+---
+
+# 💻 Cursor MCP Files Included
+
+### `.cursor/mcp_thermo.json`
+
+Tells Cursor:
+
+- how to start the server  
+- where the working directory is  
+- how to pass environment variables  
+
+### `.cursor/commands/mcp.md`
+
+Provides:
+
+- helper text  
+- examples  
+- links for users  
+
+---
+
+# 🛠 Notes for Cursor Users
+
+- The server automatically streams logs to the Cursor "MCP Tools" sidebar.  
+- Each tool includes hoverable JSON schemas.  
+- Cursor automatically reloads the MCP service when you edit `server.py`.  
+- Cursor users can extend the MCP server with new tools without restarting the IDE.
+
+---
+
+# 🤝 Contributions (Cursor Edition)
+
+Ideas welcome:
+
+- Cursor autocomplete plugins  
+- Temperature dashboards  
+- Push-notification integrations  
+- IoT device bridges  
+
+---
+
+# 📄 License
+
+MIT License  
+Use freely inside or outside Cursor.
