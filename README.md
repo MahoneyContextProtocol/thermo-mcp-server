@@ -1,29 +1,38 @@
 # thermo-mcp-server  
 A minimal, easy-to-run **Model Context Protocol (MCP)** server that exposes temperature-related tools and demonstrates how external processes (thermometers, IoT devices, scripts, etc.) can write data that an MCP-enabled client can consume.
 
-This project is intentionally small, readable, and designed as a foundation for building more advanced MCP tools.
+This project is intentionally small, readable, and built as a foundation for more advanced MCP tools.
 
 ---
 
-# 📦 Features
+## ⭐ Features
 
 ### ✔ Minimal FastMCP server  
 Provides two MCP tools:
+
 - `get_latest_temperature()` — Read the latest temperature JSON file  
 - `set_latest_temperature()` — Write a new temperature value into the JSON file  
 
+---
+
 ### ✔ External writer script  
-A CLI tool (`thermometer_listener.py`) simulates a thermometer sending readings to the MCP server by writing directly to the JSON file. This allows testing real-world workflows where hardware feeds MCP.
-
-### ✔ Notifier module  
-A tiny utility (`notifier.py`) that writes human-readable messages to stderr. This can be extended to integrate with alerts, logs, or UI notifications.
-
-### ✔ Cursor IDE Compatible  
-Includes optional configuration files for Cursor MCP clients.
+`thermometer_listener.py` simulates a hardware thermometer by writing temperature data into the JSON file.  
+This models how real-world devices or cron jobs feed data into MCP.
 
 ---
 
-# 🗂 Project Structure
+### ✔ Notifier module  
+`notifier.py` outputs readable messages to stderr.  
+You can extend this to integrate alerts, logs, webhooks, or push-notification systems.
+
+---
+
+### ✔ Cursor IDE Compatible  
+Includes **optional `.cursor/` configuration** so Cursor MCP clients automatically detect and load the server.
+
+---
+
+## 📂 Project Structure
 
 ```
 thermo-mcp-server/
@@ -31,26 +40,28 @@ thermo-mcp-server/
 ├── server.py               # MCP server — exposes temperature tools
 ├── thermometer_listener.py # Simulated device that writes temperature JSON
 ├── notifier.py             # Simple stderr logger + threshold notifier
-├── mcp_config.json         # Generic MCP config used by multiple clients
-├── requirements.txt        # Python requirements (FastMCP + dependencies)
+├── mcp_config.json         # Generic MCP config for MCP clients
+├── requirements.txt        # Python deps (FastMCP + base libs)
 │
 ├── data/
-│   └── latest_temp.json    # Where temperature readings are stored
+│   └── latest_temp.json    # Storage for temperature readings
 │
-└── .cursor/                # (optional) Cursor MCP config & commands
+└── .cursor/ (optional)
     └── commands/
-        └── mcp.md
+        └── mcp.md          # Cursor MCP command helper
 ```
 
 ---
 
 # 🚀 Quick Start (Terminal)
 
-These commands must be run **from inside the repo directory**:
+Run these **inside the repo folder**:
 
 ```bash
-cd ~/Developer/thermo-mcp-server
+cd thermo-mcp-server
 ```
+
+---
 
 ## 1. Create & activate a virtual environment
 
@@ -59,13 +70,17 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+---
+
 ## 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 3. Ensure the `data` directory exists
+---
+
+## 3. Ensure the data folder exists
 
 ```bash
 mkdir -p data
@@ -76,30 +91,26 @@ echo "{}" > data/latest_temp.json
 
 # ▶ Running the MCP Server
 
-Once dependencies are installed:
+Start the server:
 
 ```bash
 python server.py
 ```
 
-If you're running this inside an MCP client (Cursor/ChatGPT/Claude Desktop),  
-the MCP handshake will begin automatically.
-
-If running in Terminal, the server will wait for JSON-RPC messages (normal behavior).
+- In Cursor/ChatGPT/Claude Desktop: the MCP handshake begins automatically.  
+- In Terminal: it waits for JSON-RPC (normal behavior).
 
 ---
 
-# 🌡 Writing a Temperature (Simulated Thermometer)
+# 🌡 Writing a Temperature
 
-Use the CLI writer to simulate an external sensor:
+Simulate a thermometer reading:
 
 ```bash
 python thermometer_listener.py --temp 72.5 --unit F
 ```
 
-This will:
-
-1. Write the JSON below:
+Example JSON written to `data/latest_temp.json`:
 
 ```json
 {
@@ -110,8 +121,7 @@ This will:
 }
 ```
 
-2. Print messages to stderr  
-3. Trigger threshold alerts if provided:
+Add a threshold alert:
 
 ```bash
 python thermometer_listener.py --temp 90 --unit F --threshold 85
@@ -121,9 +131,11 @@ python thermometer_listener.py --temp 90 --unit F --threshold 85
 
 # 📁 Temperature File Format
 
-The server and listener both read/write:
+The server reads/writes:
 
-`data/latest_temp.json`
+```
+data/latest_temp.json
+```
 
 Example:
 
@@ -138,48 +150,55 @@ Example:
 
 ---
 
-# 🧪 MCP Tools Exposed by the Server
+# 🧪 MCP Tools Exposed
 
-### `get_latest_temperature() → dict`
-Returns the parsed JSON from `data/latest_temp.json`.
+### `get_latest_temperature() → dict`  
+Returns the parsed JSON temperature data.
 
-### `set_latest_temperature(value: float, unit: str = "F") → dict`
-Writes a new value and timestamp into the file.
+### `set_latest_temperature(value: float, unit: str = "F") → dict`  
+Writes a new temperature entry (value + timestamp).
 
 ---
 
 # 💻 Cursor Integration (Optional)
 
-Cursor-specific instructions live inside:
+Cursor users can enable the MCP server automatically.
+
+Files inside:
 
 ```
-.cursor/commands/mcp.md
+.cursor/
 ```
 
-This enables Cursor to automatically discover and interact with the MCP server.
+allow Cursor to discover and connect to the MCP server without manual setup.
 
 ---
 
 # 🛠 Development Notes
 
-- Code aims to be readable and modifiable  
-- No frameworks beyond MCP dependencies  
-- Designed for rapid experimentation with MCP tooling  
-- Safe to extend with websockets, hardware integration, databases, etc.
+- Code is intentionally simple and extensible  
+- Ideal for experimenting with MCP  
+- Easy to expand with:
+  - device hardware  
+  - push notifications  
+  - cloud integrations  
+  - automations  
+- Safe to modify and fork  
 
 ---
 
 # 🤝 Contributions
 
-PRs and suggestions are welcome, especially:
-- Adding more MCP tools  
-- Hardware integrations  
-- Cursor workflows  
-- Better UX for MCP beginners  
+PRs welcome!  
+Ideas:
+- Additional MCP tools  
+- IoT integrations  
+- Notification pipelines  
+- Improved examples  
 
 ---
 
 # 📄 License
 
-MIT License.  
-Use freely for learning, experimentation, and production.
+MIT License  
+Free to use for learning, experimentation, and production.
