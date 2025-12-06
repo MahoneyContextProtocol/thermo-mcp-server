@@ -1,0 +1,8 @@
+{
+  "command": "python",
+  "args": ["server.py"],
+  "workingDirectory": "/Users/joemahoney/Developer/thermo-mcp-server",
+  "env": {
+    "THERMO_DATA_PATH": "data/latest_temp.json"
+  }
+}
