@@ -1,140 +1,151 @@
-# Cursor MCP Setup — thermo-mcp-server
+# thermo-mcp-server  
+A minimal, example-friendly **Model Context Protocol (MCP)** server that exposes temperature tools and demonstrates how external processes can update data for MCP-enabled clients.
 
-This document explains **exactly how Cursor users can run and interact with the thermo MCP server**, including installation, activation, troubleshooting, and expected tool behavior.
-
----
-
-# 1. What This Server Does in Cursor
-
-Once activated, Cursor will automatically detect the MCP server and expose two tools:
-
-### ✔ `get_latest_temperature`  
-Read the most recent temperature JSON entry.
-
-### ✔ `set_latest_temperature`  
-Write a new value into the temperature JSON file.
-
-Cursor will show these tools inside:  
-**Settings → Tools & MCP → thermo-mcp-server**
+This project is intentionally tiny, readable, and designed as a foundation for learning MCP or building your own tools and integrations.
 
 ---
 
-# 2. Folder Locations Required by Cursor
+# 📦 Features
 
-Cursor expects MCP configurations in:
+### ✔ FastMCP-based server  
+Exposes two simple MCP tools:
+- `get_latest_temperature()` — Reads the latest temperature JSON  
+- `set_latest_temperature()` — Writes a new value into the JSON file  
 
-```
-~/Library/Application Support/Cursor/mcp/
-```
+### ✔ External sensor simulator  
+`thermometer_listener.py` simulates an IoT device writing temperature data.
 
-Your configuration file should be named:
+### ✔ Simple notifier  
+`notifier.py` outputs messages to stderr, including threshold alerts.
 
-```
-thermo.json
-```
-
-And its contents should be:
-
-```json
-{
-  "command": "python",
-  "args": ["server.py"],
-  "workingDirectory": "/Users/joemahoney/Developer/thermo-mcp-server",
-  "env": {
-    "THERMO_DATA_PATH": "data/latest_temp.json"
-  }
-}
-```
-
-Be sure that:
-
-- The workingDirectory path matches your local repo path  
-- The JSON file is valid  
-- Cursor is restarted after adding this file  
+### ✔ Optional Cursor IDE integration  
+Includes optional MCP client configuration under `.cursor/`.
 
 ---
 
-# 3. How to Enable the Server in Cursor
-
-### Step 1 — Open Cursor Settings  
-Go to:
-
-**Settings → Tools & MCP**
-
-Scroll until you find:
-
-**thermo-mcp-server → Enable toggle**
-
-Turn it **ON**.
-
-Cursor will automatically attempt to start:
+# 🗂 Project Structure
 
 ```
+thermo-mcp-server/
+│
+├── server.py               # MCP server entrypoint
+├── thermometer_listener.py # CLI that writes temperature data
+├── notifier.py             # Threshold + stderr logger
+├── mcp_config.json         # Standard JSON config used by many MCP clients
+├── requirements.txt        # Python dependencies
+│
+├── data/
+│   └── latest_temp.json    # Where readings are stored
+│
+└── .cursor/                # (optional) Cursor MCP client config
+    └── commands/
+        └── mcp.md
+```
+
+---
+
+# 🚀 Quick Start (Terminal)
+
+Run these commands from inside the project directory:
+
+## 1. Create & activate the virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+## 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3. Create the data directory
+
+```bash
+mkdir -p data
+echo "{}" > data/latest_temp.json
+```
+
+---
+
+# ▶ Running the MCP Server
+
+Start the server:
+
+```bash
 python server.py
 ```
 
-behind the scenes using your local environment.
+If you're using an MCP-enabled client (Cursor / ChatGPT / Claude Desktop),  
+it will automatically communicate with the server through stdin/stdout.
+
+Running it directly in Terminal will show no output — this is normal because  
+JSON-RPC clients send structured messages that a human normally doesn’t type.
 
 ---
 
-# 4. Verifying the Server is Running
+# 🌡 Writing a Temperature (Simulated Device)
 
-When successful, Cursor will show:
+```bash
+python thermometer_listener.py --temp 72.5 --unit F
+```
 
-- 🟢 **Enabled**  
-- 🟢 **Tools loaded**  
-- 2 tools listed under the server  
+This will:
 
-If the server fails, Cursor will display errors in red.
+1. Write into `data/latest_temp.json`
+2. Log a message to stderr
+3. Optionally trigger a threshold warning:
 
-Troubleshooting hints:
-
-### If Python not found:
-Set Cursor’s Python path manually:
-
-**Settings → Agents → Runtime → Python interpreter**
-
-### If MCP handshake fails:
-Usually caused by invalid JSON in `thermo.json`.
-
-### If server reports EOF errors:
-This is normal when running the server manually in Terminal —  
-Cursor is the only environment that will speak JSON-RPC correctly.
+```bash
+python thermometer_listener.py --temp 90 --unit F --threshold 85
+```
 
 ---
 
-# 5. Using the Tools Inside Cursor Chat
+# 📁 Temperature File Format
 
-Inside any Cursor chat:
+Example `data/latest_temp.json`:
 
-Type:
-
+```json
+{
+  "temperature": 72.5,
+  "unit": "F",
+  "timestamp": "2025-12-06T00:00:00Z",
+  "source": "listener"
+}
 ```
-@get_latest_temperature
-```
-
-or
-
-```
-@set_latest_temperature value=72.5 unit=F
-```
-
-Cursor will autocomplete MCP tools and call the functions automatically.
 
 ---
 
-# 6. Development Workflow for Cursor Users
+# 🧪 MCP Tools Provided
 
-1. Edit the python files normally  
-2. Cursor-hot reload does not apply; restart the MCP server:  
-   Turn the toggle OFF → ON  
-3. Watch logs using:  
-   **View → Debug Console → MCP**
+### `get_latest_temperature()`
+Returns the parsed contents of the temperature file.
+
+### `set_latest_temperature(value, unit="F")`
+Writes a new temperature value and timestamp.
 
 ---
 
-# 7. Notes for Contributors
+# 💻 Cursor Integration (Optional)
 
-- Cursor users should work on `cursor-support` branch  
-- `.cursor/` folder is optional for non-Cursor users  
-- MCP configs should always be JSON-validated  
+Cursor-specific instructions live inside:
+
+```
+.cursor/commands/mcp.md
+```
+
+This enables Cursor to discover and load the MCP server automatically.
+
+---
+
+# 🤝 Contributions
+Contributions are welcome — improvements to documentation, new MCP tools,  
+better examples, expanded device simulators, and more are encouraged.
+
+---
+
+# 📄 License
+MIT License.
